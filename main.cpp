@@ -183,11 +183,12 @@ int main( void ){
 	Gameplay::Game game(&camera, &fisiWorld);
 
 	// generate 1 maze
-	game.generateMazes(10);
+	game.generateMazes(9);
 
 	// create player body
 	game.generatePlayerObject(sphereBody, vec3(1.,.5,0.), 1.0f, 0.15f, vec3(1,1,1));
-	game.getPlayer()->getFisiBody()->setPosition(btVector3(2*(-game.getCurrentMaze()->initial_cell + game.getCurrentMaze()->size), 0, 2*(game.getCurrentMaze()->size)));
+	// game.getPlayer()->getFisiBody()->setPosition(btVector3(2*(-game.getCurrentMaze()->initial_cell + game.getCurrentMaze()->size), 0, 2*(game.getCurrentMaze()->size)));
+	game.movePlayerToCurrentStart();
 	
 
 	// add one light
@@ -225,11 +226,12 @@ int main( void ){
 		// Process sphere transformations (the sphere does not rotate around itself)
 		game.getPlayer()->model = glm::rotate(glm::mat4(1), glm::radians(x), vec3(1,0,0));
 		game.getPlayer()->model = glm::rotate(game.getPlayer()->model, glm::radians(z), vec3(0,0,1));
-		game.getPlayer()->model = glm::translate(game.getPlayer()->model, sphereBody->getWorldPosisiton());
+		game.getPlayer()->model = glm::translate(game.getPlayer()->model, sphereBody->getWorldPosition());
 		game.getPlayer()->model = glm::scale(game.getPlayer()->model, vec3(.038,.038,.038));
 
 		// Rotate board
-		game.getCurrentMazeObject()->model = glm::rotate(glm::mat4(1), glm::radians(x), vec3(1,0,0));
+		game.getCurrentMazeObject()->model = glm::translate(glm::mat4(1), glm::vec3(0,-8*game.currentMaze,0));
+		game.getCurrentMazeObject()->model = glm::rotate(game.getCurrentMazeObject()->model, glm::radians(x), vec3(1,0,0));
 		game.getCurrentMazeObject()->model = glm::rotate(game.getCurrentMazeObject()->model, glm::radians(z), vec3(0,0,1));
 
 		// Clear the screen
@@ -255,7 +257,7 @@ int main( void ){
 	} while(
 		glfwGetKey(window, GLFW_KEY_ESCAPE ) != GLFW_PRESS && glfwWindowShouldClose(window) == 0
 	); // Check if the ESC key was pressed or the window was closed
-		// std::abs(objects.at(0).rigidBody->getWorldPosisiton().z) < maze.size*2-2-0.5
+		// std::abs(objects.at(0).rigidBody->getWorldPosition().z) < maze.size*2-2-0.5
 
 	// Cleanup VAO, VBOs, and shaders from GPU
 	// cleanupDataFromGPU(programID, &objects);

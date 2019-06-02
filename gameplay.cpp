@@ -20,6 +20,14 @@ namespace Gameplay {
 		playerSphere->attachRigidBody(rigidBody);
 	}
 
+	void Game::movePlayerToCurrentStart(){
+		playerSphere->getFisiBody()->setPosition(btVector3(
+			2*(-getCurrentMaze()->initial_cell + getCurrentMaze()->size),
+			-8*currentMaze,
+			2*(getCurrentMaze()->size)
+		));
+	}
+
 	void Game::newMaze(int difficulty, bool activated){
 		// easiest difficulty, 0, is a 6x6*2 maze
 		// difficulty will increase in steps of four, to a maximum of  ~I N F I N I T Y~ (roughly 4294967295)
@@ -29,24 +37,26 @@ namespace Gameplay {
 		// generate maze	
 		Maze *maze = new Maze(size);
 		std::cout << "freq "<< difficulty << ", " <<1.0-difficulty/9.0<<std::endl;
-		maze->build_maze_matrix(1.0-difficulty/9.0);
+		// maze->build_maze_matrix(0);
+		maze->build_maze_matrix(.5-difficulty/9.0);
 		maze->generate_maze_coordinates();
 
 		// create maze object
 		MultiObject *mazeObj = new MultiObject(32.0, 0.15f, glm::vec3(1,1,1));
 
 		// create rigidBodies
+		int mazei = mazeObjects.size();
 		for(int i=0; i < maze->size*2 +1; i++){
 			for(int j=0; j < maze->size*2 +1; j++){
 				if(maze->Matrix()[i][j] == 'X'){
-					// std::cout << "new body " << i*(maze->size*2)+1+j <<  std::endl;
-					// std::cout << "@(" << -j*2 << ", " << 0 << ", " << -i*2 << ")" << std::endl;
-					mazeObj->attachRigidBody(fisiWorld->createFisiBody(0, btVector3(-j*2.0 + maze->size*2, 0, -i*2.0 + maze->size*2), fisiWorld->createBoxShape(btVector3(1.,1.,1.))));
+					std::cout << "new body " << i*(maze->size*2)+1+j <<  std::endl;
+					std::cout << "@(" << -j*2 << ", " << 0 - 8*mazei << ", " << -i*2 << ")" << std::endl;
+					mazeObj->attachRigidBody(fisiWorld->createFisiBody(0, btVector3(-j*2.0 + maze->size*2, 0 - 8*mazei, -i*2.0 + maze->size*2), fisiWorld->createBoxShape(btVector3(1.,1.,1.))));
 				}
 				if(maze->Matrix()[i][j] == ' '){
-					// std::cout << "new floor body " << i*(maze->size*2)+1+j <<  std::endl;
-					// std::cout << "@(" << -j*2 << ", " << -2 << ", " << -i*2 << ")" << std::endl;
-					mazeObj->attachRigidBody(fisiWorld->createFisiBody(0, btVector3(-j*2.0 + maze->size*2, -2, -i*2.0 + maze->size*2), fisiWorld->createBoxShape(btVector3(1.,1.,1.))));
+					std::cout << "new floor body " << i*(maze->size*2)+1+j <<  std::endl;
+					std::cout << "@(" << -j*2 << ", " << -2 - 8*mazei << ", " << -i*2 << ")" << std::endl;
+					mazeObj->attachRigidBody(fisiWorld->createFisiBody(0, btVector3(-j*2.0 + maze->size*2, -2 - 8*mazei, -i*2.0 + maze->size*2), fisiWorld->createBoxShape(btVector3(1.,1.,1.))));
 				}
 			}
 		}
@@ -126,6 +136,44 @@ namespace Gameplay {
 		return &lights.at(lights.size()-1);
 	}
 
+	void Game::endGame(bool won){
+		std::cout << won << std::endl;
+		std::cout << (won?"won":"lost") << std::endl;
+		gameState = won? 1 : 0;
+	}
+
+	void Game::nextMaze(int offset){
+		if(gameState > -1) // game has finished
+			return;
+		// std::cout << "Offset of: "<< offset << " cm "<< currentMaze << " maze size: "<< mazeObjects.size() << " won " <<(currentMaze + offset < 0)<< " || "<< (currentMaze + offset >= mazeObjects.size())<< std::endl;
+		// std::cout << "cm: "<<  currentMaze << " offset " << offset << " size: "<< mazeObjects.size() << std::endl;
+		int nz = currentMaze + offset;
+		int s = mazeObjects.size();
+		if(nz >= s)
+			return endGame(false);
+		if(nz < 0)
+			return endGame(true);
+
+		std::cout << "disabling bodies for current maze"<< std::endl;
+		getCurrentMazeObject()->disableRigidBodies();
+		currentMaze += offset;
+		std::cout << "enabling bodies for current maze"<< std::endl;
+		getCurrentMazeObject()->enableRigidBodies();
+		std::cout << "moving player"<< std::endl;
+		movePlayerToCurrentStart();
+	}
+
+	void Game::checkBoundery(){
+		if(gameState > -1) // game has finished
+			return;
+		// std::cout << "pos (" << this->playerSphere->getFisiBody()->getWorldPosition().x << ", "<<this->playerSphere->getFisiBody()->getWorldPosition().y<<", "<<this->playerSphere->getFisiBody()->getWorldPosition().z <<"). " << (-this->playerSphere->getFisiBody()->getWorldPosition().z > getCurrentMaze()->size*2) <<std::endl;
+		if(this->playerSphere->getFisiBody()->getWorldPosition().y < currentMaze*-8-0.5f)
+			nextMaze(1);
+		if(-this->playerSphere->getFisiBody()->getWorldPosition().z > getCurrentMaze()->size*2)
+			nextMaze(-1);
+		
+	}
+
 	void Game::update(double dt){
 		// std::cout << 1/dt << std::endl;
 		// update physics
@@ -135,6 +183,7 @@ namespace Gameplay {
 		if(isGameRunning){
 			// update time since launch
 			runningTime += dt;
+			checkBoundery();
 
 			// update time in current maze
 			if(currentMaze != -1)
@@ -149,10 +198,14 @@ namespace Gameplay {
 		playerSphere->draw(projection, camera->View, &lights.at(0), &camera->pos, shader);
 
 		// draw mazes
-		int i = 0;
-		for(std::vector<MultiObject*>::iterator it = mazeObjects.begin(); it != mazeObjects.end(); ++it){
-			(*it)->draw(projection, camera->View, &lights.at(0), &camera->pos, shader);
+		if(currentMaze != -1){
+			for(int i = currentMaze; i < mazeObjects.size(); i++){
+				mazeObjects.at(i)->draw(projection, camera->View, &lights.at(0), &camera->pos, shader);
+			}
 		}
+		// for(std::vector<MultiObject*>::iterator it = mazeObjects.begin(); it != mazeObjects.end(); ++it){
+		// 	(*it)->draw(projection, camera->View, &lights.at(0), &camera->pos, shader);
+		// }
 	}
 
 	Game::~Game(){

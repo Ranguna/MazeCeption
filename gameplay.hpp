@@ -46,8 +46,14 @@ namespace Gameplay {
 			std::vector<double> mazeTimes;
 
 			std::map<const char *, int> shaders;
+
+			void nextMaze(int offset);
+			void checkBoundery();
+			void endGame(bool won);
 		public:
 			Game(Camera *camera, fisiqs::FisiWorld *fisiWorld, int n_mazes=0, int start_difficulty=0, int step=1);
+
+			int gameState = -1; // -1: ongoing, 0: lost, 1: won
 			
 			int currentMaze = -1;
 			std::vector<MultiObject*>* getMazes(){ return &mazeObjects; }
@@ -62,6 +68,7 @@ namespace Gameplay {
 
 			void generatePlayerObject(fisiqs::FisiBody *rigidBody, glm::vec3 playerColor, float shininess, float specularStrength, glm::vec3 specularColor);
 			void generatePlayerObject(glm::vec3 playerColor, float shininess, float specularStrength, glm::vec3 specularColor);
+			void movePlayerToCurrentStart();
 
 			void newMaze(int difficulty, bool activated);
 			void generateMazes(int n=1, int start_difficulty=0, int step=1);

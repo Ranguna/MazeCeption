@@ -81,6 +81,7 @@ namespace fisiqs {
 	}
 
 	void FisiBody::setPosition(btVector3 position){
+		// std::cout << "setting player to "<< position.x << ", "<<position.y << ", " << position.z << std::endl;
 		btTransform transform;
 		transform.setIdentity();
 		transform.setOrigin(position);
@@ -97,7 +98,7 @@ namespace fisiqs {
 		return world->getBodyModel(body);
 	}
 
-	glm::vec3 FisiBody::getWorldPosisiton(){
+	glm::vec3 FisiBody::getWorldPosition(){
 		// btTransform transform = body->getWorldTransform();
 		btTransform transform;
 		body->getMotionState()->getWorldTransform(transform);

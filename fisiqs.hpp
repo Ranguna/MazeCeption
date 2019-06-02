@@ -1,6 +1,8 @@
 #ifndef FISI_GUARD
 #define FISI_GUARD
 
+#include<iostream>
+
 #include <btBulletDynamicsCommon.h>
 #include <glm/glm.hpp>
 
@@ -22,7 +24,7 @@ namespace fisiqs {
 			void setPosition(btVector3 position);
 
 			glm::mat4 getOpenGLMatrix();
-			glm::vec3 getWorldPosisiton();
+			glm::vec3 getWorldPosition();
 			glm::vec3 getRotation();
 			void disableBody();
 			void enableBody();

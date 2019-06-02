@@ -31,6 +31,7 @@ namespace Gameplay {
 
 		for(std::vector<fisiqs::FisiBody*>::iterator it = rigidBodies.begin(); it != rigidBodies.end(); it++)
 			(*it)->disableBody();
+		areBodiesEnabled = false;
 	}
 	void MultiObject::enableRigidBodies(){
 		if(areBodiesEnabled)
@@ -38,6 +39,7 @@ namespace Gameplay {
 
 		for(std::vector<fisiqs::FisiBody*>::iterator it = rigidBodies.begin(); it != rigidBodies.end(); it++)
 			(*it)->enableBody();
+		areBodiesEnabled = true;
 	}
 
 	MultiObject::~MultiObject(){
