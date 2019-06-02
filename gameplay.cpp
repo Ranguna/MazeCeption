@@ -136,10 +136,59 @@ namespace Gameplay {
 		return &lights.at(lights.size()-1);
 	}
 
+	void drawStrokeText(char* palavra,int x,int y,int z)
+	{
+	    char *c;
+	    glPushMatrix();
+	    glTranslatef(x, y+8,z);
+	    glScalef(0.2f,-0.5f,z);
+	  
+	    for (c=palavra; *c != '\0'; c++)
+	    {
+	        glutStrokeCharacter(GLUT_STROKE_ROMAN , *c);
+	    }
+	    glPopMatrix();
+	}
+
+	void reshape(int w,int h) 
+	{ 
+	 
+	    glViewport(0,0,w,h); 
+	    glMatrixMode(GL_PROJECTION); 
+	    glLoadIdentity(); 
+	    gluOrtho2D(0,w,h,0); 
+	    glMatrixMode(GL_MODELVIEW); 
+	    glLoadIdentity(); 
+
+	}
+
+	void render(void)
+	{ 
+	  glClear(GL_COLOR_BUFFER_BIT); 
+	  glLoadIdentity();
+	 
+	  glColor3f(1,1,1);
+	  drawStrokeText((char *)"Congratulations, you won!",270,200,0);
+
+	  glutSwapBuffers(); 
+	} 
+
 	void Game::endGame(bool won){
-		std::cout << won << std::endl;
+		/*std::cout << won << std::endl;
 		std::cout << (won?"won":"lost") << std::endl;
-		gameState = won? 1 : 0;
+		gameState = won? 1 : 0;*/
+
+		//glutInit(&argc, argv);
+
+		glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
+	    glutInitWindowSize(1000,500);
+	    //glutInitWindowPosition(100,100);
+	    int window1 = glutCreateWindow("3D Maze");
+	    glutDisplayFunc(render);
+		glutIdleFunc(render);
+	    glutReshapeFunc(reshape);
+	    glutMainLoop();	
+
 	}
 
 	void Game::nextMaze(int offset){

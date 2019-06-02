@@ -16,6 +16,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <GL/freeglut.h>
 using namespace glm;
 
 // shaders header file
@@ -27,6 +28,15 @@ using namespace glm;
 #include "maze.hpp"
 #include "fisiqs.hpp"
 #include "light.hpp"
+
+static int menu_id;
+static int submenu_id;
+static int value = 0;
+static int window1;
+GLFWwindow *window;
+
+GLint WindowWidth = 1024;
+GLint WindowHeight = 768;
 
 vec2 getMousePosition(GLFWwindow *window){
 	double x,y;
@@ -130,19 +140,39 @@ Camera setupCamera(glm::mat4 *Projection, glm::mat4 *View, glm::vec3 initialPosi
 	return camera;
  }
 
-int main( void ){
+ void init()
+{
+  glClearColor(0.0,0.0,0.0,0.0);
+}
 
-	// Initialise GLFW
-	glfwInit();
-		
+void menu(int num){
+  if(num == 0){
+    glutDestroyWindow(window1);
+    exit(0);
+  }else{
+    value = num;
+  } 
+  glutPostRedisplay();
+} 
+void createMenu(void){     
+    submenu_id = glutCreateMenu(menu);
+    glutAddMenuEntry("Maze", 2);     
+    menu_id = glutCreateMenu(menu);
+    glutAddSubMenu("Start", submenu_id);
+    glutAddMenuEntry("Quit", 0);     
+    glutAttachMenu(GLUT_RIGHT_BUTTON);
+} 
+void display(void){
+  glClear(GL_COLOR_BUFFER_BIT);   if(value == 1){
+    return; //glutPostRedisplay();
+  }else if(value == 2){
+
 	glfwWindowHint(GLFW_SAMPLES, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // To make MacOS happy; should not be needed
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-		
-	GLint WindowWidth = 1024;
-	GLint WindowHeight = 768;
+
 	vec2 windowDimensions(WindowWidth, WindowHeight);
 	// Open a window
 	GLFWwindow *window = glfwCreateWindow( WindowWidth, WindowHeight, "Minimal example", NULL, NULL);
@@ -264,6 +294,71 @@ int main( void ){
 		
 	// Close OpenGL window and terminate GLFW
 	glfwTerminate();
+  }
+  glFlush();
+}
+
+void drawStrokeText(char* palavra,int x,int y,int z)
+{
+    char *c;
+    glPushMatrix();
+    glTranslatef(x, y+8,z);
+    glScalef(0.2f,-0.5f,z);
+  
+    for (c=palavra; *c != '\0'; c++)
+    {
+        glutStrokeCharacter(GLUT_STROKE_ROMAN , *c);
+    }
+    glPopMatrix();
+}
+
+
+
+
+void reshape(int w,int h) 
+{ 
+ 
+    glViewport(0,0,w,h); 
+    glMatrixMode(GL_PROJECTION); 
+    glLoadIdentity(); 
+    gluOrtho2D(0,w,h,0); 
+    glMatrixMode(GL_MODELVIEW); 
+    glLoadIdentity(); 
+
+}
+
+
+void render(void)
+{ 
+  glClear(GL_COLOR_BUFFER_BIT); 
+  glLoadIdentity();
+ 
+  glColor3f(1,1,1);
+  drawStrokeText((char *)"Welcome to the 3D Maze!",270,200,0);
+  drawStrokeText((char *)"(Click the right mouse button to open menu)",100,300,0);
+
+  glutSwapBuffers(); 
+} 
+
+int main(int argc, char **argv){
+
+	// Initialise GLFW
+	glfwInit();
+
+	glutInit(&argc, argv);
+
+	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
+    glutInitWindowSize(1000,500);
+    //glutInitWindowPosition(100,100);
+    window1 = glutCreateWindow("3D Maze");
+    glutDisplayFunc(render);
+	glutIdleFunc(render);
+    glutReshapeFunc(reshape); 
+	createMenu();     
+    glClearColor(0.0,0.0,0.0,0.0);
+    glutDisplayFunc(display);
+    //glutDestroyWindow(window1);  
+    glutMainLoop();	
 		
 	return 0;
 }
